@@ -9,14 +9,13 @@ Lien du challenge : [https://www.root-me.org/fr/Challenges/App-Systeme/ELF-x64-S
 
 ## On s'installe et on étudie :
 
-{: .note }
-> scp -P 2223 app-systeme-ch99@challenge03.root-me.org:ch99 .  
-> scp -P 2223 app-systeme-ch99@challenge03.root-me.org:libddd.so .  
-> patchelf --set-rpath . ch99  
-> ch99 n'est pas PIE, full RELRO
-
+```bash
+scp -P 2223 app-systeme-ch99@challenge03.root-me.org:ch99 .  
+scp -P 2223 app-systeme-ch99@challenge03.root-me.org:libddd.so .  
+patchelf --set-rpath . ch99  
+```
+ch99 n'est pas PIE, full RELRO
 Peu de gadgets, pas d'imports, pas de libc, quasi impossible d'utiliser libddd (PIE)
-
 Ca fait peu mais en même temps ca aiguille, surtout avec le nom de l'épreuve.
 
 ### Le code se résume à ca :
