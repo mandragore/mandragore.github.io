@@ -1,7 +1,7 @@
 ---
 layout: post  
-title: "ELF x64 Syscall chaining"  
-date: 2026-02-10 09:21:40 +0100
+title: "Challenge ELF x64 Syscall chaining, root-me.org"  
+date: 2026-02-07 09:21:40 +0100
 categories: CTF
 ---
 
