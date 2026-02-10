@@ -17,5 +17,8 @@ J'ai pu faire des formations sur la sécurité, notamment IPSEC et Radius.
 Après concours je suis rentré à l'INRAE sur un poste similaire, où j'ai pu faire de l'appui à la recherche en data mining et nettoyage de données auprès de sociologues et d'économistes.
 J'ai pu exercer des missions de gestion de projet et de structuration de réseaux métiers. De très bonnes expériences pour appréhender l'aspect humain du métier.
 
-En dehors je fais un peu d'éléctronique et de domotique avec des cartes de developpement rapide ; Rasperry, Arduino, ESP32, etc 
-Et pour m'aérer du sport en plein air, de la randonnée et des stages de survie (plantes comestibles, etc).
+Comme tout le monde, je me mets aux LLM et autres MCP.
+
+En dehors je fais un peu d'éléctronique et de domotique avec des cartes de developpement rapide ; Raspberry, Arduino, ESP32.
+Pour m'aérer je fais du sport en plein air, de la randonnée et des stages de survie (plantes comestibles, bivouac, etc).
+Et quand je reviens je cuisine, souvent des produits fermentés maison (bières artisanales, kéfir, kimschi).
