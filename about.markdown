@@ -2,7 +2,7 @@
 layout: page
 title: About
 permalink: /about/
-nav_order: 5
+nav_order: 40
 ---
 
 Autodidacte, je suis tombé dans l'informatique petit et j'ai commencé par l'amstrad.
@@ -20,6 +20,6 @@ Sur concours externe je suis rentré à l'INRAE sur un poste similaire, où je f
 J'ai aussi exercé des missions de gestion de projet et de structuration de réseaux métiers. De très bonnes expériences pour appréhender l'aspect humain du métier.
 Comme tout le monde je me mets aux LLM et autres MCP.
 
-En dehors je fais un peu d'éléctronique et de domotique avec des cartes de developpement rapide ; Raspberry, Arduino, ESP32.
+En dehors je fais un peu d'éléctronique et de domotique avec des cartes de developpement rapide ; Raspberry, Arduino, ESP32, et de radioamateurisme (F4MQT).
 Pour m'aérer je fais du sport en plein air, de la randonnée et des stages de survie (plantes comestibles, potabilisation de l'eau, abris, etc).
 Et quand je reviens je cuisine et je fais des préparations maisons ; bières artisanales, kéfir, kimschi, etc.
