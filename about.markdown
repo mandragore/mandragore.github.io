@@ -2,6 +2,7 @@
 layout: page
 title: About
 permalink: /about/
+nav_order: 5
 ---
 
 Autodidacte, je suis tombé dans l'informatique petit et j'ai commencé par l'amstrad.
