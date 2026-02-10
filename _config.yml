@@ -28,8 +28,12 @@ url: "https://mandragore.github.io" # the base hostname & protocol for your site
 github_username:  mandragore
 
 # Build settings
-remote_theme: just-the-docs
+remote_theme: just-the-docs/just-the-docs
+
+# Activation du plugin nécessaire pour GitHub Pages
 plugins:
+  - jekyll-remote-theme
+  - jekyll-seo-tag # Souvent recommandé avec ce thème
   - jekyll-feed
 
 # Exclude from processing.
