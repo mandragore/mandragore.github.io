@@ -4,7 +4,7 @@ title: CTF
 nav_order: 2
 ---
 
-# Derniers articles
+# Derniers articles, writeups choisis, davantage sur mon gist.
 
 {% assign category_posts = site.categories['CTF'] %}
 
