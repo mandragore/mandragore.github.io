@@ -1,11 +1,12 @@
 ---
 layout: post  
 title: "Challenge eraise, fcsc 2025"
-date: 2026-02-11 23:41:40 +0100
+date: 2026-02-11 14:03:56 +0100
 categories: CTF
 ---
 
-# Challenge: eraise https://hackropole.fr/fr/challenges/pwn/fcsc2025-pwn-eraise/
+# Challenge: eraise
+https://hackropole.fr/fr/challenges/pwn/fcsc2025-pwn-eraise/
 
 Il s'agit d'une application pour allouer et libérer de la mémoire, on part donc sur une vulnérabilité de heap.  
 Effectivement en tatonnant on s'apercoit rapidement qu'on peut éditer un slot libéré.
