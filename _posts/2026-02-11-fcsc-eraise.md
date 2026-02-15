@@ -1,6 +1,6 @@
 ---
 layout: post  
-title: "Challenge eraise, fcsc 2025"
+title: "Challenge eraise, FCSC 2025"
 date: 2026-02-11 14:03:56 +0100
 categories: CTF
 ---
