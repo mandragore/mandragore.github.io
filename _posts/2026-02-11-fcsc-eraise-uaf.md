@@ -6,7 +6,7 @@ categories: CTF
 ---
 
 # Challenge: eraise
-[https://hackropole.fr/fr/challenges/pwn/fcsc2025-pwn-eraise/)](https://hackropole.fr/fr/challenges/pwn/fcsc2025-pwn-eraise/
+[https://hackropole.fr/fr/challenges/pwn/fcsc2025-pwn-eraise/](https://hackropole.fr/fr/challenges/pwn/fcsc2025-pwn-eraise/)
 
 Il s'agit d'une application pour allouer et libérer de la mémoire, on part donc sur une vulnérabilité de heap.  
 Effectivement en tatonnant on s'apercoit rapidement qu'on peut éditer un slot libéré.
@@ -23,8 +23,8 @@ On peut voir qu'il y a une autre variable sur la pile (renommée isboss) qui con
 ```
 +0x22fd case 5  
 +0x22fd   if (isboss != 0)  
-+0x2322   char line\[0x88\]  
-+0x2322   read\_string(&line, 0x80)  
++0x2322   char line[0x88]  
++0x2322   read_string(&line, 0x80)  
 +0x2331   system(&line)  
 +0x2336   continue
 ```
