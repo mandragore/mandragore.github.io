@@ -58,7 +58,7 @@ Linux 9e2e019f87bd 6.8.0-100-generic #100-Ubuntu SMP PREEMPT_DYNAMIC Tue Jan 13 
 FCSC{1f0ab477d3ec9b50c0e1259d8e18f10d47c9c046041ef5fe344c30e0da8dca6c}
 ```
 
- - mandragore, 2026/02/20
+ \- mandragore, 2026/02/20
 
 ```python
 #!/usr/bin/env python3
