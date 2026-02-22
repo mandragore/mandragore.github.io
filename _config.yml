@@ -18,10 +18,10 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: Mandragore's showcase
+title: Mandragore's CTF blog
 email: github@guilla.me
 description: >- # this means to ignore newlines until "baseurl:"
-  A showcase of my work and projects.
+  A showcase of my CTF writeups.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://mandragore.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 # twitter_username: jekyllrb
@@ -36,6 +36,7 @@ plugins:
   - jekyll-seo-tag # Souvent recommandé avec ce thème
   - jekyll-feed
 
+footer_content: "<script defer src=\"https://stats.antimatiere.info/20j0uJ8QcG6XlO4p\" data-website-id=\"1f07ab6e-352c-45d3-b826-f31ba8e3b5ac\"></script>"
 # Exclude from processing.
 # The following items will not be processed, by default.
 # Any item listed under the `exclude:` key here will be automatically added to
