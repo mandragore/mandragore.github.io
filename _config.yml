@@ -19,11 +19,11 @@
 # in the templates via {{ site.myvariable }}.
 
 title: Mandragore's CTF blog
-email: github@guilla.me
+email: mandragore+githubio@antimatiere.info
 description: >- # this means to ignore newlines until "baseurl:"
   A showcase of my CTF writeups.
 baseurl: "" # the subpath of your site, e.g. /blog
-url: "https://mandragore.github.io" # the base hostname & protocol for your site, e.g. http://example.com
+url: "https://mandragore.antimatiere.info" # the base hostname & protocol for your site, e.g. http://example.com
 # twitter_username: jekyllrb
 github_username:  mandragore
 

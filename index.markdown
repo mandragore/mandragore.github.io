@@ -11,7 +11,7 @@ nav_order: 10
 Autodidacte passionné, j'ai exploré de nombreux domaines de l'informatique : du développement à l'administration système et réseau.
 Aujourd'hui, je m'intéresse particulièrement à la **sécurité offensive et défensive**, que je pratique notamment à travers des **CTF** (Capture The Flag), avec un goût prononcé pour le **pwn** et le **reverse engineering**.
 
-Actuellement en poste à l'INRAE, j'apporte mon appui à la recherche en data mining et gestion de données en complément de mes activités de devops.
+Actuellement en poste, j'apporte mon appui à la recherche en data mining et gestion de données en complément de mes activités de devops.
 
 Ce site regroupe mes articles, writeups de CTF et diverses ressources techniques.
 
