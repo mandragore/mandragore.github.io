@@ -16,7 +16,7 @@ gem "just-the-docs"
 # gem "github-pages", group: :jekyll_plugins
 # If you have any plugins, put them here!
 gem "jekyll-default-layout"
-
+gem "jekyll-remote-theme"
 gem "github-pages", group: :jekyll_plugins
 
 # Windows and JRuby does not include zoneinfo files, so bundle the tzinfo-data gem
