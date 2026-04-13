@@ -32,6 +32,7 @@ theme: just-the-docs
 
 # Activation du plugin nécessaire pour GitHub Pages
 plugins:
+  - jekyll-default-layout
   - jekyll-remote-theme
   - jekyll-seo-tag # Souvent recommandé avec ce thème
   - jekyll-feed
