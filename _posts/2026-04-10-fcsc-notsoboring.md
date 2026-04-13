@@ -26,26 +26,25 @@ Voici ce qui est autorisé :
         seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(exit_group), 0);
 ```
 
-coté enfant (je passe rapidement, c'est le parent qui est interessant, cf write up de 'boring')
-    vulnérabilité 1 dans validate_email()
-        Grace à un leak en changeant un champ du cbor pour lui dire qu'il est plus grand qu'il ne l'est réellement on obtient le canary et la libc.
-    vulnérabilité 2 dans validate_email()
+Coté enfant (je passe rapidement, c'est le parent qui est interessant, cf write up de 'boring')
+* vulnérabilité 1 dans validate_email()
+Grace à un leak en changeant un champ du cbor pour lui dire qu'il est plus grand qu'il ne l'est réellement on obtient le canary et la libc.
+* vulnérabilité 2 dans validate_email()
 
 ```c
         +0x0f7                char var_58[0x20]
         +0x0f7                memcpy(&var_58, &arg1[1], rax_6)
 ```
+Overflow de pile, [ROP](https://en.wikipedia.org/wiki/Return-oriented_programming)
+Peu de place, besoin d'avoir des offsets fixes pour certains paramètres, on fera un pivot vers la section .bss.
+Le ROP sera multistage pour récupérer des infos et continuer en fonction de celles ci.
+* etape 1 : récupérer une vue totale de la mémoire en affichant /proc/self/maps et récupérer l'étape 2
+* etape 2 : passer du ROP à du code classique (via pwrite64 /proc/self/mem) pour exploiter le parent, cf plus bas.
+Ici seccomp n'est parametré que pour filtrer le x64, pas le 32 bits, mais les adresses ne permettaient pas de switcher.
 
-        -> overflow de pile.. stack frame.. ROP
-        Peu de place, besoin d'avoir des offsets fixes pour certains paramètres, on fera un pivot vers la section .bss.
-        Le ROP sera multistage pour récupérer des infos et continuer en fonction de celles ci.
-        etape 1 : récupérer une vue totale de la mémoire en affichant /proc/self/maps et récupérer l'étape 2
-        etape 2 : passer du ROP à du code classique (via pwrite64 /proc/self/mem) pour exploiter le parent, cf plus bas.
-        Ici seccomp n'est parametré que pour filtrer le x64, pas le 32 bits, mais les adresses ne permettaient pas de switcher.
-
-coté parent:
-        L'exploit dans l'enfant remplit g_shm_mailbox et signale qu'un message est dispo à run_supervisor() via un pipe. Il simule sandbox_send().
-        run_supervisor() va appeler handle_ipc_command(). Voici le début de la fonction :
+Coté parent:
+L'exploit dans l'enfant remplit g_shm_mailbox et signale qu'un message est dispo à `run_supervisor()` via un pipe. Il simule `sandbox_send()`.
+`run_supervisor()` va appeler `handle_ipc_command()`. Voici le début de la fonction :
 
 ```assembly
             +0x000    uint64_t handle_ipc_command(int64_t* arg1)
@@ -64,21 +63,21 @@ coté parent:
             +0x026  ffe0               jmp     rax
 ```
 
-        L'enfant va spammer handle_ipc_command() tout en modifiant g_shm_mailbox pour changer [rdi] entre 'cmp qword [rdi], 0x7' et 'mov rax, qword [rdi]'
-        Le but est de faire une race condition sur ce 'switch (msg->command)' pour sauter trop loin dans le code ; [rdi] est utilisé pour calculer le saut.
-        D'où l'interet de passer par du code pur à la place du ROP pour spammer efficacement. Même ansi le taux de succès est faible, mais réaliste.
+L'enfant va spammer handle_ipc_command() tout en modifiant g_shm_mailbox pour changer [rdi] entre 'cmp qword [rdi], 0x7' et 'mov rax, qword [rdi]'
+Le but est de faire une race condition sur ce 'switch (msg->command)' pour sauter trop loin dans le code ; [rdi] est utilisé pour calculer le saut.
+D'où l'interet de passer par du code pur à la place du ROP pour spammer efficacement. Même ansi le taux de succès est faible, mais réaliste.
 
-        Ce switch() utilise une table de saut qu'on appelera 'jump_table_4022e4' (enfin c'est binaryninja qui a choisit).
-        En fonction de 'msg->command' il lit une valeur dans la table, l'ajoute à l'adresse de la table, et y saute.
-        Il faut donc que l'index de la table pointe vers quelque chose que l'on peut définir, à savoir une valeur qui, ajoutée à l'adresse de la table, soit l'adresse où l'on veut aller.
-        Dans le process parent on ne controle que g_shm_mailbox donc on doit faire en sorte que index*4+&table=&g_shm_mailbox+0x10 (pointeur après msg->command).
-        La valeur à placer dans *[g_shm_mailbox+0x10] sera &destination-&table.
-        Comme la libsandbox est chargée plus haut que la heap qui contient g_shm_mailbox, l'index sera très grand pour devenir négatif au moment du 'movsxd  rax, dword [rdx+rax*4]'.
-        Où aller ? Les one gadget ne marchent pas, tous utilisent RBP qui contient le pid de l'enfant à ce moment là, cela provoque un SIGSEV.
-        RDI et RBX contient l'adresse de g_shm_mailbox..
-        La solution que j'ai trouvé a été de sauter vers 'setcontext' (libc), qui redéfinit tout le contexte selon le contenu située à RDI.
-        Ca permet de redéfinir tous les registres, y compris RSP et RIP, comme un sigreturn.
-        Du coup je lance un execve('/bin/sh',0,0) et paf le flag.
+Ce switch() utilise une table de saut qu'on appelera 'jump_table_4022e4' (enfin c'est binaryninja qui a choisit).
+En fonction de 'msg->command' il lit une valeur dans la table, l'ajoute à l'adresse de la table, et y saute.
+Il faut donc que l'index de la table pointe vers quelque chose que l'on peut définir, à savoir une valeur qui, ajoutée à l'adresse de la table, soit l'adresse où l'on veut aller.
+Dans le process parent on ne controle que g_shm_mailbox donc on doit faire en sorte que index*4+&table=&g_shm_mailbox+0x10 (pointeur après msg->command).
+La valeur à placer dans `*[g_shm_mailbox+0x10]` sera &destination-&table.
+Comme la libsandbox est chargée plus haut que la heap qui contient g_shm_mailbox, l'index sera très grand pour devenir négatif au moment du 'movsxd  rax, dword [rdx+rax*4]'.
+Où aller ? Les one gadget ne marchent pas, tous utilisent RBP qui contient le pid de l'enfant à ce moment là, cela provoque un SIGSEV.
+RDI et RBX contiennent l'adresse de g_shm_mailbox..
+La solution que j'ai trouvé a été de sauter vers 'setcontext' (libc), qui redéfinit tout le contexte selon le contenu située à RDI.
+Ca permet de redéfinir tous les registres, y compris RSP et RIP, comme un sigreturn.
+Du coup je lance un execve('/bin/sh',0,0), et /getflag dans le shell. Et paf le flag.
 
 ```console
 ➜  not-so-boring ./exploit.py REMOTE
