@@ -28,7 +28,7 @@ url: "https://mandragore.antimatiere.info" # the base hostname & protocol for yo
 github_username:  mandragore
 
 # Build settings
-theme: just-the-docs
+remote_theme: just-the-docs/just-the-docs
 
 # Activation du plugin nécessaire pour GitHub Pages
 plugins:
