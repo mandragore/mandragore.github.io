@@ -1,17 +1,19 @@
 ---
 layout: post
-title: "Challenge not so boring, FCSC 2026"
+title: "Challenge Not so boring, FCSC 2026"
 date: 2026-04-10 12:00:00 +0100
 categories: CTF
 ---
 
-C'est un challenge en deux parties, la première était "Boring".
-Nous nous interesserons à la seconde partie, "Not-so-boring".
+# Not so boring
 
-Le programme est maintenant lancé (LD_PRELOAD) avec une lib qui fait un fork() et sandbox l'enfant.
+C'est un challenge en deux parties, la première était "Boring".
+Nous nous interesserons à la seconde.
+
+Le programme est maintenant lancé avec une lib, via `LD_PRELOAD`, qui fait un fork() et sandbox l'enfant.
 Coté enfant la lib utilise seccomp et hook certaines fonctions libc.
-Les hook communiquent avec le parent via un pipe et un buffer partagé appelé g_shm_mailbox.
-Les hooks ne sont pas vraiment utiles, seccomp bloquerait les tentatives. Interessant..
+Les hooks communiquent avec le parent via un pipe et un buffer partagé appelé `g_shm_mailbox`.
+Les hooks ne sont pas vraiment utiles, seccomp bloquerait les tentatives. Interessant..  
 Voici ce qui est autorisé :
 
 ```c
@@ -26,23 +28,24 @@ Voici ce qui est autorisé :
         seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(exit_group), 0);
 ```
 
-Coté enfant (je passe rapidement, c'est le parent qui est interessant, cf write up de 'boring')
-* vulnérabilité 1 dans validate_email()
+## Coté enfant :
+Je passe rapidement, c'est le parent qui est interessant, cf write up de 'boring'.
+* vulnérabilité 1 dans `print_team()`
 Grace à un leak en changeant un champ du cbor pour lui dire qu'il est plus grand qu'il ne l'est réellement on obtient le canary et la libc.
-* vulnérabilité 2 dans validate_email()
+* vulnérabilité 2 dans `validate_email()`
 
 ```c
         +0x0f7                char var_58[0x20]
         +0x0f7                memcpy(&var_58, &arg1[1], rax_6)
 ```
-Overflow de pile, [ROP](https://en.wikipedia.org/wiki/Return-oriented_programming)
+Overflow de pile, [ROP](https://en.wikipedia.org/wiki/Return-oriented_programming).
 Peu de place, besoin d'avoir des offsets fixes pour certains paramètres, on fera un pivot vers la section .bss.
 Le ROP sera multistage pour récupérer des infos et continuer en fonction de celles ci.
 * etape 1 : récupérer une vue totale de la mémoire en affichant /proc/self/maps et récupérer l'étape 2
 * etape 2 : passer du ROP à du code classique (via pwrite64 /proc/self/mem) pour exploiter le parent, cf plus bas.
 Ici seccomp n'est parametré que pour filtrer le x64, pas le 32 bits, mais les adresses ne permettaient pas de switcher.
 
-Coté parent:
+## Coté parent :
 L'exploit dans l'enfant remplit g_shm_mailbox et signale qu'un message est dispo à `run_supervisor()` via un pipe. Il simule `sandbox_send()`.
 `run_supervisor()` va appeler `handle_ipc_command()`. Voici le début de la fonction :
 
@@ -63,21 +66,18 @@ L'exploit dans l'enfant remplit g_shm_mailbox et signale qu'un message est dispo
             +0x026  ffe0               jmp     rax
 ```
 
-L'enfant va spammer handle_ipc_command() tout en modifiant g_shm_mailbox pour changer [rdi] entre 'cmp qword [rdi], 0x7' et 'mov rax, qword [rdi]'
-Le but est de faire une race condition sur ce 'switch (msg->command)' pour sauter trop loin dans le code ; [rdi] est utilisé pour calculer le saut.
-D'où l'interet de passer par du code pur à la place du ROP pour spammer efficacement. Même ansi le taux de succès est faible, mais réaliste.
+L'enfant va spammer `handle_ipc_command()` tout en modifiant `g_shm_mailbox` pour changer `[rdi]` entre `cmp qword [rdi], 0x7` et `mov rax, qword [rdi]`.  
+Le but est de faire une race condition sur ce `switch (msg->command)` pour sauter trop loin dans le code ; `[rdi]` est utilisé pour calculer le saut. D'où l'interet de passer par du code pur à la place du ROP pour spammer efficacement. Même ansi le taux de succès est faible, mais suffisant.  
 
-Ce switch() utilise une table de saut qu'on appelera 'jump_table_4022e4' (enfin c'est binaryninja qui a choisit).
-En fonction de 'msg->command' il lit une valeur dans la table, l'ajoute à l'adresse de la table, et y saute.
-Il faut donc que l'index de la table pointe vers quelque chose que l'on peut définir, à savoir une valeur qui, ajoutée à l'adresse de la table, soit l'adresse où l'on veut aller.
-Dans le process parent on ne controle que g_shm_mailbox donc on doit faire en sorte que index*4+&table=&g_shm_mailbox+0x10 (pointeur après msg->command).
-La valeur à placer dans `*[g_shm_mailbox+0x10]` sera &destination-&table.
-Comme la libsandbox est chargée plus haut que la heap qui contient g_shm_mailbox, l'index sera très grand pour devenir négatif au moment du 'movsxd  rax, dword [rdx+rax*4]'.
-Où aller ? Les one gadget ne marchent pas, tous utilisent RBP qui contient le pid de l'enfant à ce moment là, cela provoque un SIGSEV.
-RDI et RBX contiennent l'adresse de g_shm_mailbox..
-La solution que j'ai trouvé a été de sauter vers 'setcontext' (libc), qui redéfinit tout le contexte selon le contenu située à RDI.
-Ca permet de redéfinir tous les registres, y compris RSP et RIP, comme un sigreturn.
-Du coup je lance un execve('/bin/sh',0,0), et /getflag dans le shell. Et paf le flag.
+Ce switch() utilise une table de saut ; en fonction de `msg->command` il lit une valeur dans la table, l'ajoute à l'adresse de la table, et y saute.  
+Il faut donc que l'index de la table pointe vers quelque chose que l'on peut définir, à savoir une valeur qui, ajoutée à l'adresse de la table, soit l'adresse où l'on veut aller.  
+Dans le process parent on ne controle que `g_shm_mailbox` donc on doit faire en sorte que `index*4+&table=&g_shm_mailbox+0x10` (pointeur après `msg->command`).  
+La valeur à placer dans `*[g_shm_mailbox+0x10]` sera `&destination-&table`.  
+Comme la libsandbox est chargée plus haut que la heap qui contient `g_shm_mailbox`, l'index sera très grand pour devenir négatif au moment du `movsxd  rax, dword [rdx+rax*4]`.  
+Où aller ? Les one gadget ne marchent pas, tous utilisent RBP qui contient le pid de l'enfant à ce moment là, cela provoque un SIGSEV.  
+RDI et RBX contiennent l'adresse de `g_shm_mailbox`.  
+La solution que j'ai trouvé a été de sauter vers la function `setcontext` de la libc, qui redéfinit tout le contexte selon le contenu située à RDI. Ca permet de redéfinir tous les registres, y compris RSP et RIP, comme un sigreturn.  
+Du coup je lance un execve('/bin/sh',0,0), et /getflag depuis le shell. Et paf le flag.
 
 ```console
 ➜  not-so-boring ./exploit.py REMOTE
@@ -100,7 +100,7 @@ Linux not-so-boring 6.18.20-metal-hardened-pwn #1 SMP Sun Mar 29 21:23:43 UTC 20
 FCSC{faeebeeeaa6369be7079b085470bc92103cda6133a55d1df7b0c45f05f026e60}$  
 ```
 
-  - mandragore, 2026/04/09
+- mandragore, 2026/04/09
 
 ```python
 
@@ -338,3 +338,4 @@ p.interactive()
    0x786b7ae7a42d <setcontext+125>:     xor    eax,eax
    0x786b7ae7a42f <setcontext+127>:     ret
 """
+```
