@@ -46,7 +46,7 @@ Le ROP sera multistage pour récupérer des infos et continuer en fonction de ce
 Ici seccomp n'est parametré que pour filtrer le x64, pas le 32 bits, mais les adresses ne permettaient pas de switcher.
 
 ## Coté parent :
-L'exploit dans l'enfant remplit g_shm_mailbox et signale qu'un message est dispo à `run_supervisor()` via un pipe. Il simule `sandbox_send()`.
+L'exploit dans l'enfant remplit `g_shm_mailbox` et signale qu'un message est dispo à `run_supervisor()` via un pipe. Il simule `sandbox_send()`.
 `run_supervisor()` va appeler `handle_ipc_command()`. Voici le début de la fonction :
 
 ```assembly
@@ -67,17 +67,17 @@ L'exploit dans l'enfant remplit g_shm_mailbox et signale qu'un message est dispo
 ```
 
 L'enfant va spammer `handle_ipc_command()` tout en modifiant `g_shm_mailbox` pour changer `[rdi]` entre `cmp qword [rdi], 0x7` et `mov rax, qword [rdi]`.  
-Le but est de faire une race condition sur ce `switch (msg->command)` pour sauter trop loin dans le code ; `[rdi]` est utilisé pour calculer le saut. D'où l'interet de passer par du code pur à la place du ROP pour spammer efficacement. Même ansi le taux de succès est faible, mais suffisant.  
+Le but est de faire une race condition sur ce `switch (msg->command)` pour sauter trop loin dans le code ; `[rdi]` est utilisé pour calculer le saut. D'où l'interet de passer par du code pur, optimisé, à la place du ROP pour spammer efficacement. Même ainsi le taux de succès est faible, mais suffisant.
 
 Ce switch() utilise une table de saut ; en fonction de `msg->command` il lit une valeur dans la table, l'ajoute à l'adresse de la table, et y saute.  
 Il faut donc que l'index de la table pointe vers quelque chose que l'on peut définir, à savoir une valeur qui, ajoutée à l'adresse de la table, soit l'adresse où l'on veut aller.  
-Dans le process parent on ne controle que `g_shm_mailbox` donc on doit faire en sorte que `index*4+&table=&g_shm_mailbox+0x10` (pointeur après `msg->command`).  
+Dans le process parent on ne controle que `g_shm_mailbox` donc on doit faire en sorte que `index*4+&table = &g_shm_mailbox+0x10` (pointeur après `msg->command`).  
 La valeur à placer dans `*[g_shm_mailbox+0x10]` sera `&destination-&table`.  
 Comme la libsandbox est chargée plus haut que la heap qui contient `g_shm_mailbox`, l'index sera très grand pour devenir négatif au moment du `movsxd  rax, dword [rdx+rax*4]`.  
 Où aller ? Les one gadget ne marchent pas, tous utilisent RBP qui contient le pid de l'enfant à ce moment là, cela provoque un SIGSEV.  
 RDI et RBX contiennent l'adresse de `g_shm_mailbox`.  
-La solution que j'ai trouvé a été de sauter vers la function `setcontext` de la libc, qui redéfinit tout le contexte selon le contenu située à RDI. Ca permet de redéfinir tous les registres, y compris RSP et RIP, comme un sigreturn.  
-Du coup je lance un execve('/bin/sh',0,0), et /getflag depuis le shell. Et paf le flag.
+La solution que j'ai trouvé a été de sauter vers la function `setcontext` de la libc, qui redéfinit tout le contexte selon le contenu situé à RDI. Ca permet de redéfinir tous les registres, y compris RSP et RIP, comme un sigreturn.  
+Du coup on lance un execve('/bin/sh',0,0), et /getflag depuis le shell. Et paf le flag.
 
 ```console
 ➜  not-so-boring ./exploit.py REMOTE
